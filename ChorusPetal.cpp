@@ -21,6 +21,7 @@ struct GlobalParameters
 	float level { 1.f };
 	float feedback { 0.f };
 	float rate { 1.f };
+	size_t voices { 1 };
 	dingus_dsp::SmoothValue<float> delay_time {};
 	dingus_dsp::SmoothValue<float> depth {};
 };
@@ -36,6 +37,10 @@ void Controls()
 	g_param.mix = hw.knob[0].Process();
 	g_param.level = hw.knob[1].Process();
 	g_param.effectOn ^= hw.switches[0].RisingEdge();
+
+	g_param.voices += hw.encoder.Increment();
+	g_param.voices = dingus_dsp::Clamp(g_param.voices, (size_t) 1, g_chorus.GetMaxNumVoices());
+	g_chorus.SetNumVoices(g_param.voices);
 
 	g_param.feedback = hw.knob[3].Process();
 	g_chorus.SetFeedbackLevel(g_param.feedback);
@@ -96,7 +101,11 @@ int main(void)
 		hw.DelayMs(6);
 		hw.ClearLeds();
 
-		hw.SetFootswitchLed((DaisyPetal::FootswitchLed)0, (float)g_param.effectOn);
+		hw.SetFootswitchLed((DaisyPetal::FootswitchLed) 0, (float) g_param.effectOn);
+
+		for (int i = 0; i < g_param.voices; i++) {
+			hw.SetRingLed((DaisyPetal::RingLed) i, 1.f, 0.f, 0.f);
+		}
 
 		hw.UpdateLeds();
 	}

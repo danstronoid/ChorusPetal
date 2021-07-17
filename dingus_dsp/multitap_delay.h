@@ -40,10 +40,11 @@ class MultitapDelay
             float gain = 1.f;
             float mod_value = osc_.Process();
 
-            for (float tap : delay_taps_) {
-                float offset = tap * mod_value * 0.5f;
-                output += delay_line_.Read(tap + offset) * gain;
-                gain = gain - decay_;
+            // Only read and output from the active taps.
+            for (size_t i = 0; i < active_taps_; i++) {
+                float offset = delay_taps_[i] * mod_value * 0.5f;
+                output += delay_line_.Read(delay_taps_[i] + offset) * gain;
+                gain = gain = decay_;
             }
 
             prev_output_ = output;
@@ -89,10 +90,19 @@ class MultitapDelay
             osc_.SetAmplitude(Clamp<float>(depth, -1.f, 1.f));
         }
 
+        // Sets the number of active taps to process.
+        // Activates taps in increasing order of delay time.
+        // Value must be between 1 and the total num_taps
+        void SetNumActiveTaps(size_t active_taps) {
+            active_taps_ = Clamp(active_taps, 1, num_taps);
+        }
+
         // Returns the maximum delay time in samples.
         // Only allow for a maximum delay of half the buffer size.
         // This prevents a modulated time beyond the length of the buffer.
-        size_t GetMaxDelay() { return max_delay / 2; };
+        size_t GetMaxDelay() { return max_delay / 2; }
+
+        size_t GetMaxNumTaps() { return num_taps; }
 
     private:
         // The delay buffer.
@@ -118,6 +128,9 @@ class MultitapDelay
 
         // The audio sample rate.
         float sample_rate_ {};
+
+        // The number of active taps to output.
+        size_t active_taps_ { num_taps };
 
         // Calculates a random spread value for each tap.
         // This is done at initialization and the value is seeded with a constant.

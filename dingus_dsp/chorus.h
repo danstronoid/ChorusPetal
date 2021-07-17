@@ -42,6 +42,11 @@ class Chorus
             return static_cast<float>(delaylines_[0].GetMaxDelay()) / sample_rate_;
         }
 
+        // Returns the maximum number of voices.
+        size_t GetMaxNumVoices() {
+            return delaylines_[0].GetMaxNumTaps();
+        }
+
         // Set the delay time given a 0 to 1 parameter.
         // Scales the time to between 5ms to 25ms
         void SetDelayTime(float delay_time) {
@@ -68,12 +73,14 @@ class Chorus
             delaylines_[1].SetFeedbackLevel(feedback_lvl);
         }
 
-    private:
-        // Stereo modulated delay lines.
-        //std::array<ModulatedDelay, 2> delaylines_;
+        void SetNumVoices(size_t voices) {
+            delaylines_[0].SetNumActiveTaps(voices);
+            delaylines_[1].SetNumActiveTaps(voices);
+        }
 
+    private:
         // Stereo multitap delay lines.
-        std::array<MultitapDelay<1, 48000>, 2> delaylines_;
+        std::array<MultitapDelay<4, 48000>, 2> delaylines_;
 
         // The audio sample rate.
         float sample_rate_ {};
