@@ -1,0 +1,505 @@
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 28, 1
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 2
+  10              		.eabi_attribute 34, 1
+  11              		.eabi_attribute 18, 4
+  12              		.file	"oscillator.cpp"
+  13              		.text
+  14              	.Ltext0:
+  15              		.cfi_sections	.debug_frame
+  16              		.section	.text._ZN10dingus_dsp10Oscillator4InitEf,"ax",%progbits
+  17              		.align	1
+  18              		.p2align 2,,3
+  19              		.global	_ZN10dingus_dsp10Oscillator4InitEf
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv5-d16
+  26              	_ZN10dingus_dsp10Oscillator4InitEf:
+  27              	.LVL0:
+  28              	.LFB2778:
+  29              		.file 1 "dingus_dsp/oscillator.cpp"
+   1:dingus_dsp/oscillator.cpp **** /*
+   2:dingus_dsp/oscillator.cpp ****   ==============================================================================
+   3:dingus_dsp/oscillator.cpp **** 
+   4:dingus_dsp/oscillator.cpp ****     File: oscillator.h
+   5:dingus_dsp/oscillator.cpp ****     Author: Daniel Schwartz
+   6:dingus_dsp/oscillator.cpp ****     Description: A basic oscillator implemented using per sample calculations.
+   7:dingus_dsp/oscillator.cpp **** 
+   8:dingus_dsp/oscillator.cpp ****   ==============================================================================
+   9:dingus_dsp/oscillator.cpp **** */
+  10:dingus_dsp/oscillator.cpp **** 
+  11:dingus_dsp/oscillator.cpp **** #include "oscillator.h"
+  12:dingus_dsp/oscillator.cpp **** 
+  13:dingus_dsp/oscillator.cpp **** using namespace dingus_dsp;
+  14:dingus_dsp/oscillator.cpp **** 
+  15:dingus_dsp/oscillator.cpp **** void Oscillator::Init(float sample_rate) {
+  30              		.loc 1 15 42 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  16:dingus_dsp/oscillator.cpp ****     sample_rate_ = sample_rate;
+  35              		.loc 1 16 5 view .LVU1
+  36              	.LBB6:
+  37              	.LBB7:
+  17:dingus_dsp/oscillator.cpp ****     Reset();
+  18:dingus_dsp/oscillator.cpp ****     UpdateDelta();
+  19:dingus_dsp/oscillator.cpp **** }
+  20:dingus_dsp/oscillator.cpp **** 
+  21:dingus_dsp/oscillator.cpp **** float Oscillator::Process() {
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 2
+
+
+  22:dingus_dsp/oscillator.cpp ****     float sample = 0;
+  23:dingus_dsp/oscillator.cpp **** 
+  24:dingus_dsp/oscillator.cpp ****     switch (osc_type_) {
+  25:dingus_dsp/oscillator.cpp ****         case OscType::SINE:
+  26:dingus_dsp/oscillator.cpp ****             sample = sinf(phase_);
+  27:dingus_dsp/oscillator.cpp ****             break;
+  28:dingus_dsp/oscillator.cpp **** 
+  29:dingus_dsp/oscillator.cpp ****         case OscType::TRI:
+  30:dingus_dsp/oscillator.cpp ****             sample = (2.f / MathConstants<float>::PI) * asinf(sinf(phase_));
+  31:dingus_dsp/oscillator.cpp ****             break;
+  32:dingus_dsp/oscillator.cpp **** 
+  33:dingus_dsp/oscillator.cpp ****         case OscType::SAW:
+  34:dingus_dsp/oscillator.cpp ****             sample = -1.f * ((phase_ / MathConstants<float>::PI) - 1.f);
+  35:dingus_dsp/oscillator.cpp ****             break;
+  36:dingus_dsp/oscillator.cpp **** 
+  37:dingus_dsp/oscillator.cpp ****         case OscType::PULSE:
+  38:dingus_dsp/oscillator.cpp ****             sample = (phase_ < MathConstants<float>::PI) ? 1 : -1;
+  39:dingus_dsp/oscillator.cpp ****             break;
+  40:dingus_dsp/oscillator.cpp **** 
+  41:dingus_dsp/oscillator.cpp ****         default:
+  42:dingus_dsp/oscillator.cpp ****             sample = sinf(phase_);
+  43:dingus_dsp/oscillator.cpp ****             break;
+  44:dingus_dsp/oscillator.cpp ****     }
+  45:dingus_dsp/oscillator.cpp **** 
+  46:dingus_dsp/oscillator.cpp ****     phase_ += delta_;
+  47:dingus_dsp/oscillator.cpp **** 
+  48:dingus_dsp/oscillator.cpp ****     if (phase_ > MathConstants<float>::TWOPI) {
+  49:dingus_dsp/oscillator.cpp ****         phase_ = phase_ - MathConstants<float>::TWOPI;
+  50:dingus_dsp/oscillator.cpp ****     }
+  51:dingus_dsp/oscillator.cpp **** 
+  52:dingus_dsp/oscillator.cpp ****     return amp_ * sample;
+  53:dingus_dsp/oscillator.cpp **** }
+  54:dingus_dsp/oscillator.cpp **** 
+  55:dingus_dsp/oscillator.cpp **** void Oscillator::UpdateDelta() {
+  56:dingus_dsp/oscillator.cpp ****     delta_ = MathConstants<float>::TWOPI * freq_ / sample_rate_;
+  38              		.loc 1 56 42 is_stmt 0 view .LVU2
+  39 0000 9FED077A 		vldr.32	s14, .L3
+  40              	.LBE7:
+  41              	.LBE6:
+  42              	.LBB11:
+  43              	.LBB12:
+  44              		.file 2 "dingus_dsp/oscillator.h"
+   1:dingus_dsp/oscillator.h **** /*
+   2:dingus_dsp/oscillator.h ****   ==============================================================================
+   3:dingus_dsp/oscillator.h **** 
+   4:dingus_dsp/oscillator.h ****     File: oscillator.h
+   5:dingus_dsp/oscillator.h ****     Author: Daniel Schwartz
+   6:dingus_dsp/oscillator.h ****     Description: A basic oscillator implemented using per sample calculations.
+   7:dingus_dsp/oscillator.h **** 
+   8:dingus_dsp/oscillator.h ****   ==============================================================================
+   9:dingus_dsp/oscillator.h **** */
+  10:dingus_dsp/oscillator.h **** 
+  11:dingus_dsp/oscillator.h **** #pragma once
+  12:dingus_dsp/oscillator.h **** #ifndef DINGUS_OSC_H
+  13:dingus_dsp/oscillator.h **** #define DINGUS_OSC_H
+  14:dingus_dsp/oscillator.h **** 
+  15:dingus_dsp/oscillator.h **** #include "dingus_math.h"
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 3
+
+
+  16:dingus_dsp/oscillator.h **** 
+  17:dingus_dsp/oscillator.h **** namespace dingus_dsp 
+  18:dingus_dsp/oscillator.h **** {
+  19:dingus_dsp/oscillator.h **** 
+  20:dingus_dsp/oscillator.h **** // The different oscillator waveforms available.
+  21:dingus_dsp/oscillator.h **** enum class OscType {
+  22:dingus_dsp/oscillator.h ****     SINE,
+  23:dingus_dsp/oscillator.h ****     TRI,
+  24:dingus_dsp/oscillator.h ****     SAW,
+  25:dingus_dsp/oscillator.h ****     PULSE,
+  26:dingus_dsp/oscillator.h ****     MAX
+  27:dingus_dsp/oscillator.h **** };
+  28:dingus_dsp/oscillator.h **** 
+  29:dingus_dsp/oscillator.h **** // A basic oscillator implemented using per sample calculations.
+  30:dingus_dsp/oscillator.h **** class Oscillator 
+  31:dingus_dsp/oscillator.h **** {
+  32:dingus_dsp/oscillator.h ****     public:
+  33:dingus_dsp/oscillator.h ****         Oscillator() {}
+  34:dingus_dsp/oscillator.h ****         ~Oscillator() {}
+  35:dingus_dsp/oscillator.h **** 
+  36:dingus_dsp/oscillator.h ****         // Initialize the oscillator for playback given the audio rate.
+  37:dingus_dsp/oscillator.h ****         void Init(float sample_rate);
+  38:dingus_dsp/oscillator.h **** 
+  39:dingus_dsp/oscillator.h ****         // Process a single sample.
+  40:dingus_dsp/oscillator.h ****         float Process();
+  41:dingus_dsp/oscillator.h **** 
+  42:dingus_dsp/oscillator.h ****         // Reset the phase of the oscillator.
+  43:dingus_dsp/oscillator.h ****         void Reset() {
+  44:dingus_dsp/oscillator.h ****             phase_ = 0; 
+  45              		.loc 2 44 20 view .LVU3
+  46 0004 0023     		movs	r3, #0
+  47              	.LBE12:
+  48              	.LBE11:
+  49              	.LBB15:
+  50              	.LBB8:
+  51              		.loc 1 56 42 view .LVU4
+  52 0006 D0ED027A 		vldr.32	s15, [r0, #8]
+  53              	.LBE8:
+  54              	.LBE15:
+  55              	.LBB16:
+  56              	.LBB13:
+  57              		.loc 2 44 20 view .LVU5
+  58 000a C360     		str	r3, [r0, #12]	@ float
+  59              	.LBE13:
+  60              	.LBE16:
+  61              	.LBB17:
+  62              	.LBB9:
+  63              		.loc 1 56 42 view .LVU6
+  64 000c 67EE877A 		vmul.f32	s15, s15, s14
+  65              	.LBE9:
+  66              	.LBE17:
+  16:dingus_dsp/oscillator.cpp ****     Reset();
+  67              		.loc 1 16 18 view .LVU7
+  68 0010 80ED050A 		vstr.32	s0, [r0, #20]
+  17:dingus_dsp/oscillator.cpp ****     Reset();
+  69              		.loc 1 17 5 is_stmt 1 view .LVU8
+  70              	.LVL1:
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 4
+
+
+  71              	.LBB18:
+  72              	.LBI11:
+  43:dingus_dsp/oscillator.h ****             phase_ = 0; 
+  73              		.loc 2 43 14 view .LVU9
+  74              	.LBB14:
+  75              		.loc 2 44 13 view .LVU10
+  76              		.loc 2 44 13 is_stmt 0 view .LVU11
+  77              	.LBE14:
+  78              	.LBE18:
+  18:dingus_dsp/oscillator.cpp **** }
+  79              		.loc 1 18 5 is_stmt 1 view .LVU12
+  80              	.LBB19:
+  81              	.LBI6:
+  55:dingus_dsp/oscillator.cpp ****     delta_ = MathConstants<float>::TWOPI * freq_ / sample_rate_;
+  82              		.loc 1 55 6 view .LVU13
+  83              	.LBB10:
+  84              		.loc 1 56 5 view .LVU14
+  85              		.loc 1 56 50 is_stmt 0 view .LVU15
+  86 0014 87EE807A 		vdiv.f32	s14, s15, s0
+  87              		.loc 1 56 12 view .LVU16
+  88 0018 80ED047A 		vstr.32	s14, [r0, #16]
+  89              	.LVL2:
+  90              		.loc 1 56 12 view .LVU17
+  91              	.LBE10:
+  92              	.LBE19:
+  19:dingus_dsp/oscillator.cpp **** 
+  93              		.loc 1 19 1 view .LVU18
+  94 001c 7047     		bx	lr
+  95              	.L4:
+  96 001e 00BF     		.align	2
+  97              	.L3:
+  98 0020 DB0FC940 		.word	1086918619
+  99              		.cfi_endproc
+ 100              	.LFE2778:
+ 102              		.section	.text._ZN10dingus_dsp10Oscillator7ProcessEv,"ax",%progbits
+ 103              		.align	1
+ 104              		.p2align 2,,3
+ 105              		.global	_ZN10dingus_dsp10Oscillator7ProcessEv
+ 106              		.syntax unified
+ 107              		.thumb
+ 108              		.thumb_func
+ 109              		.fpu fpv5-d16
+ 111              	_ZN10dingus_dsp10Oscillator7ProcessEv:
+ 112              	.LVL3:
+ 113              	.LFB2779:
+  21:dingus_dsp/oscillator.cpp ****     float sample = 0;
+ 114              		.loc 1 21 29 is_stmt 1 view -0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+  22:dingus_dsp/oscillator.cpp **** 
+ 118              		.loc 1 22 5 view .LVU20
+  24:dingus_dsp/oscillator.cpp ****         case OscType::SINE:
+ 119              		.loc 1 24 5 view .LVU21
+  24:dingus_dsp/oscillator.cpp ****         case OscType::SINE:
+ 120              		.loc 1 24 13 is_stmt 0 view .LVU22
+ 121 0000 0368     		ldr	r3, [r0]
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 5
+
+
+  24:dingus_dsp/oscillator.cpp ****         case OscType::SINE:
+ 122              		.loc 1 24 5 view .LVU23
+ 123 0002 022B     		cmp	r3, #2
+  21:dingus_dsp/oscillator.cpp ****     float sample = 0;
+ 124              		.loc 1 21 29 view .LVU24
+ 125 0004 10B5     		push	{r4, lr}
+ 126              		.cfi_def_cfa_offset 8
+ 127              		.cfi_offset 4, -8
+ 128              		.cfi_offset 14, -4
+ 129 0006 0446     		mov	r4, r0
+ 130 0008 2DED028B 		vpush.64	{d8}
+ 131              		.cfi_def_cfa_offset 16
+ 132              		.cfi_offset 80, -16
+ 133              		.cfi_offset 81, -12
+  24:dingus_dsp/oscillator.cpp ****         case OscType::SINE:
+ 134              		.loc 1 24 5 view .LVU25
+ 135 000c 1FD0     		beq	.L6
+ 136 000e 032B     		cmp	r3, #3
+ 137 0010 37D0     		beq	.L7
+ 138 0012 012B     		cmp	r3, #1
+ 139 0014 28D0     		beq	.L8
+  25:dingus_dsp/oscillator.cpp ****             sample = sinf(phase_);
+ 140              		.loc 1 25 9 is_stmt 1 view .LVU26
+  26:dingus_dsp/oscillator.cpp ****             break;
+ 141              		.loc 1 26 13 view .LVU27
+  26:dingus_dsp/oscillator.cpp ****             break;
+ 142              		.loc 1 26 26 is_stmt 0 view .LVU28
+ 143 0016 90ED038A 		vldr.32	s16, [r0, #12]
+ 144 001a B0EE480A 		vmov.f32	s0, s16
+ 145 001e FFF7FEFF 		bl	sinf
+ 146              	.LVL4:
+  27:dingus_dsp/oscillator.cpp **** 
+ 147              		.loc 1 27 13 is_stmt 1 view .LVU29
+ 148              	.L9:
+  46:dingus_dsp/oscillator.cpp **** 
+ 149              		.loc 1 46 5 view .LVU30
+  46:dingus_dsp/oscillator.cpp **** 
+ 150              		.loc 1 46 12 is_stmt 0 view .LVU31
+ 151 0022 D4ED047A 		vldr.32	s15, [r4, #16]
+  48:dingus_dsp/oscillator.cpp ****         phase_ = phase_ - MathConstants<float>::TWOPI;
+ 152              		.loc 1 48 5 view .LVU32
+ 153 0026 9FED1F7A 		vldr.32	s14, .L15
+  46:dingus_dsp/oscillator.cpp **** 
+ 154              		.loc 1 46 12 view .LVU33
+ 155 002a 78EE277A 		vadd.f32	s15, s16, s15
+  48:dingus_dsp/oscillator.cpp ****         phase_ = phase_ - MathConstants<float>::TWOPI;
+ 156              		.loc 1 48 5 is_stmt 1 view .LVU34
+  53:dingus_dsp/oscillator.cpp **** 
+ 157              		.loc 1 53 1 is_stmt 0 view .LVU35
+ 158 002e BDEC028B 		vldm	sp!, {d8}
+ 159              		.cfi_remember_state
+ 160              		.cfi_restore 80
+ 161              		.cfi_restore 81
+ 162              		.cfi_def_cfa_offset 8
+  48:dingus_dsp/oscillator.cpp ****         phase_ = phase_ - MathConstants<float>::TWOPI;
+ 163              		.loc 1 48 5 view .LVU36
+ 164 0032 F4EEC77A 		vcmpe.f32	s15, s14
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 6
+
+
+ 165 0036 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  49:dingus_dsp/oscillator.cpp ****     }
+ 166              		.loc 1 49 9 is_stmt 1 view .LVU37
+  52:dingus_dsp/oscillator.cpp **** }
+ 167              		.loc 1 52 5 view .LVU38
+  49:dingus_dsp/oscillator.cpp ****     }
+ 168              		.loc 1 49 25 is_stmt 0 view .LVU39
+ 169 003a C8BF     		it	gt
+ 170 003c 77EEC77A 		vsubgt.f32	s15, s15, s14
+  49:dingus_dsp/oscillator.cpp ****     }
+ 171              		.loc 1 49 16 view .LVU40
+ 172 0040 C4ED037A 		vstr.32	s15, [r4, #12]
+  52:dingus_dsp/oscillator.cpp **** }
+ 173              		.loc 1 52 19 view .LVU41
+ 174 0044 D4ED017A 		vldr.32	s15, [r4, #4]
+  53:dingus_dsp/oscillator.cpp **** 
+ 175              		.loc 1 53 1 view .LVU42
+ 176 0048 20EE270A 		vmul.f32	s0, s0, s15
+ 177              	.LVL5:
+  53:dingus_dsp/oscillator.cpp **** 
+ 178              		.loc 1 53 1 view .LVU43
+ 179 004c 10BD     		pop	{r4, pc}
+ 180              	.LVL6:
+ 181              	.L6:
+ 182              		.cfi_restore_state
+  33:dingus_dsp/oscillator.cpp ****             sample = -1.f * ((phase_ / MathConstants<float>::PI) - 1.f);
+ 183              		.loc 1 33 9 is_stmt 1 view .LVU44
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 184              		.loc 1 34 13 view .LVU45
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 185              		.loc 1 34 31 is_stmt 0 view .LVU46
+ 186 004e 90ED038A 		vldr.32	s16, [r0, #12]
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 187              		.loc 1 34 66 view .LVU47
+ 188 0052 F7EE007A 		vmov.f32	s15, #1.0e+0
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 189              		.loc 1 34 38 view .LVU48
+ 190 0056 9FED147A 		vldr.32	s14, .L15+4
+ 191 005a 88EE070A 		vdiv.f32	s0, s16, s14
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 192              		.loc 1 34 66 view .LVU49
+ 193 005e 30EE670A 		vsub.f32	s0, s0, s15
+  34:dingus_dsp/oscillator.cpp ****             break;
+ 194              		.loc 1 34 20 view .LVU50
+ 195 0062 B1EE400A 		vneg.f32	s0, s0
+ 196              	.LVL7:
+  35:dingus_dsp/oscillator.cpp **** 
+ 197              		.loc 1 35 13 is_stmt 1 view .LVU51
+ 198 0066 DCE7     		b	.L9
+ 199              	.LVL8:
+ 200              	.L8:
+  29:dingus_dsp/oscillator.cpp ****             sample = (2.f / MathConstants<float>::PI) * asinf(sinf(phase_));
+ 201              		.loc 1 29 9 view .LVU52
+  30:dingus_dsp/oscillator.cpp ****             break;
+ 202              		.loc 1 30 13 view .LVU53
+  30:dingus_dsp/oscillator.cpp ****             break;
+ 203              		.loc 1 30 62 is_stmt 0 view .LVU54
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 7
+
+
+ 204 0068 90ED030A 		vldr.32	s0, [r0, #12]
+ 205 006c FFF7FEFF 		bl	sinf
+ 206              	.LVL9:
+  30:dingus_dsp/oscillator.cpp ****             break;
+ 207              		.loc 1 30 62 view .LVU55
+ 208 0070 FFF7FEFF 		bl	asinf
+ 209              	.LVL10:
+  30:dingus_dsp/oscillator.cpp ****             break;
+ 210              		.loc 1 30 20 view .LVU56
+ 211 0074 DFED0D7A 		vldr.32	s15, .L15+8
+  46:dingus_dsp/oscillator.cpp **** 
+ 212              		.loc 1 46 12 view .LVU57
+ 213 0078 94ED038A 		vldr.32	s16, [r4, #12]
+  30:dingus_dsp/oscillator.cpp ****             break;
+ 214              		.loc 1 30 20 view .LVU58
+ 215 007c 20EE270A 		vmul.f32	s0, s0, s15
+ 216              	.LVL11:
+  31:dingus_dsp/oscillator.cpp **** 
+ 217              		.loc 1 31 13 is_stmt 1 view .LVU59
+ 218 0080 CFE7     		b	.L9
+ 219              	.LVL12:
+ 220              	.L7:
+  37:dingus_dsp/oscillator.cpp ****             sample = (phase_ < MathConstants<float>::PI) ? 1 : -1;
+ 221              		.loc 1 37 9 view .LVU60
+  38:dingus_dsp/oscillator.cpp ****             break;
+ 222              		.loc 1 38 13 view .LVU61
+  38:dingus_dsp/oscillator.cpp ****             break;
+ 223              		.loc 1 38 23 is_stmt 0 view .LVU62
+ 224 0082 90ED038A 		vldr.32	s16, [r0, #12]
+  38:dingus_dsp/oscillator.cpp ****             break;
+ 225              		.loc 1 38 20 view .LVU63
+ 226 0086 B7EE000A 		vmov.f32	s0, #1.0e+0
+ 227 008a 9FED077A 		vldr.32	s14, .L15+4
+ 228 008e FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 229 0092 B4EEC78A 		vcmpe.f32	s16, s14
+ 230 0096 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 231 009a 58BF     		it	pl
+ 232 009c B0EE670A 		vmovpl.f32	s0, s15
+ 233 00a0 BFE7     		b	.L9
+ 234              	.L16:
+ 235 00a2 00BF     		.align	2
+ 236              	.L15:
+ 237 00a4 DB0FC940 		.word	1086918619
+ 238 00a8 DB0F4940 		.word	1078530011
+ 239 00ac 83F9223F 		.word	1059256707
+ 240              		.cfi_endproc
+ 241              	.LFE2779:
+ 243              		.section	.text._ZN10dingus_dsp10Oscillator11UpdateDeltaEv,"ax",%progbits
+ 244              		.align	1
+ 245              		.p2align 2,,3
+ 246              		.global	_ZN10dingus_dsp10Oscillator11UpdateDeltaEv
+ 247              		.syntax unified
+ 248              		.thumb
+ 249              		.thumb_func
+ 250              		.fpu fpv5-d16
+ 252              	_ZN10dingus_dsp10Oscillator11UpdateDeltaEv:
+ 253              	.LVL13:
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 8
+
+
+ 254              	.LFB2780:
+  55:dingus_dsp/oscillator.cpp ****     delta_ = MathConstants<float>::TWOPI * freq_ / sample_rate_;
+ 255              		.loc 1 55 32 is_stmt 1 view -0
+ 256              		.cfi_startproc
+ 257              		@ args = 0, pretend = 0, frame = 0
+ 258              		@ frame_needed = 0, uses_anonymous_args = 0
+ 259              		@ link register save eliminated.
+ 260              		.loc 1 56 5 view .LVU65
+ 261              		.loc 1 56 42 is_stmt 0 view .LVU66
+ 262 0000 9FED067A 		vldr.32	s14, .L18
+ 263 0004 D0ED027A 		vldr.32	s15, [r0, #8]
+ 264              		.loc 1 56 50 view .LVU67
+ 265 0008 D0ED056A 		vldr.32	s13, [r0, #20]
+ 266              		.loc 1 56 42 view .LVU68
+ 267 000c 67EE877A 		vmul.f32	s15, s15, s14
+ 268              		.loc 1 56 50 view .LVU69
+ 269 0010 87EEA67A 		vdiv.f32	s14, s15, s13
+ 270              		.loc 1 56 12 view .LVU70
+ 271 0014 80ED047A 		vstr.32	s14, [r0, #16]
+  57:dingus_dsp/oscillator.cpp **** }
+ 272              		.loc 1 57 1 view .LVU71
+ 273 0018 7047     		bx	lr
+ 274              	.L19:
+ 275 001a 00BF     		.align	2
+ 276              	.L18:
+ 277 001c DB0FC940 		.word	1086918619
+ 278              		.cfi_endproc
+ 279              	.LFE2780:
+ 281              		.text
+ 282              	.Letext0:
+ 283              		.file 3 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 284              		.file 4 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 285              		.file 5 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 286              		.file 6 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\lib\\gcc\\arm-none-
+ 287              		.file 7 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 288              		.file 8 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 289              		.file 9 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\incl
+ 290              		.file 10 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 291              		.file 11 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 292              		.file 12 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 293              		.file 13 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 294              		.file 14 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 295              		.file 15 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 296              		.file 16 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 297              		.file 17 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 298              		.file 18 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 299              		.file 19 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 300              		.file 20 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 301              		.file 21 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 302              		.file 22 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 303              		.file 23 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 304              		.file 24 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 305              		.file 25 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 306              		.file 26 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 307              		.file 27 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 308              		.file 28 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\lib\\gcc\\arm-none
+ 309              		.file 29 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 9
+
+
+ 310              		.file 30 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 311              		.file 31 "c:\\users\\daniel schwartz\\documents\\daisytoolchain-0.3.1\\windows\\arm-none-eabi\\inc
+ 312              		.file 32 "dingus_dsp/dingus_math.h"
+ 313              		.file 33 "<built-in>"
+ARM GAS  C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s 			page 10
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 oscillator.cpp
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:17     .text._ZN10dingus_dsp10Oscillator4InitEf:00000000 $t
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:26     .text._ZN10dingus_dsp10Oscillator4InitEf:00000000 _ZN10dingus_dsp10Oscillator4InitEf
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:98     .text._ZN10dingus_dsp10Oscillator4InitEf:00000020 $d
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:103    .text._ZN10dingus_dsp10Oscillator7ProcessEv:00000000 $t
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:111    .text._ZN10dingus_dsp10Oscillator7ProcessEv:00000000 _ZN10dingus_dsp10Oscillator7ProcessEv
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:237    .text._ZN10dingus_dsp10Oscillator7ProcessEv:000000a4 $d
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:244    .text._ZN10dingus_dsp10Oscillator11UpdateDeltaEv:00000000 $t
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:252    .text._ZN10dingus_dsp10Oscillator11UpdateDeltaEv:00000000 _ZN10dingus_dsp10Oscillator11UpdateDeltaEv
+C:\Users\DANIEL~1\AppData\Local\Temp\ccALNB2O.s:277    .text._ZN10dingus_dsp10Oscillator11UpdateDeltaEv:0000001c $d
+
+UNDEFINED SYMBOLS
+sinf
+asinf
