@@ -22,7 +22,7 @@ class Chorus
         void Init(float sample_rate) {
             sample_rate_ = sample_rate;
             delaylines_[0].Init(sample_rate);
-            delaylines_[1].Init(sample_rate);
+            delaylines_[1].Init(sample_rate, 333);
         }
 
         // Process a sample for one channel.
@@ -49,10 +49,11 @@ class Chorus
 
         // Set the delay time given a 0 to 1 parameter.
         // Scales the time to between 5ms to 25ms
+        // The right delay line has a 2ms offset.
         void SetDelayTime(float delay_time) {
-            delay_time = .005f + delay_time * 0.025f;
+            delay_time = .005f + delay_time * 0.023f;
             delaylines_[0].SetDelayTime(delay_time);
-            delaylines_[1].SetDelayTime(delay_time);
+            delaylines_[1].SetDelayTime(delay_time + 0.002f);
         }
 
         // Set the rate of modulation.
@@ -73,6 +74,7 @@ class Chorus
             delaylines_[1].SetFeedbackLevel(feedback_lvl);
         }
 
+        // Set the number of voices (taps).
         void SetNumVoices(size_t voices) {
             delaylines_[0].SetNumActiveTaps(voices);
             delaylines_[1].SetNumActiveTaps(voices);
@@ -80,7 +82,7 @@ class Chorus
 
     private:
         // Stereo multitap delay lines.
-        std::array<MultitapDelay<4, 48000>, 2> delaylines_;
+        std::array<MultitapDelay<8, 48000>, 2> delaylines_;
 
         // The audio sample rate.
         float sample_rate_ {};

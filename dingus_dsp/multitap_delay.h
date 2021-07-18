@@ -19,7 +19,7 @@ class MultitapDelay
         ~MultitapDelay() {}
 
         // Sets the initial state of the delay given the sample rate.
-        void Init(float sample_rate) {
+        void Init(float sample_rate, int random_seed = 666) {
             sample_rate_ = sample_rate;
             osc_.Init(sample_rate_);
             osc_.SetType(OscType::SINE);
@@ -27,16 +27,16 @@ class MultitapDelay
             decay_ = 1.f / static_cast<float>(num_taps);
 
             // Set the random spread values
-            srand(666);
+            srand(random_seed);
             CalculateSpread();
         }
 
         // Writes the input sample to the delay buffer and returns the delayed output.
         float Process(float input) {
             float output = 0.f;
-            float feedback = prev_output_ * feedback_lvl_;
+            float feedback = prev_output_ * feedback_lvl_ / active_taps_;
             delay_line_.Write(input + feedback);
-
+            
             float gain = 1.f;
             float mod_value = osc_.Process();
 
@@ -44,7 +44,7 @@ class MultitapDelay
             for (size_t i = 0; i < active_taps_; i++) {
                 float offset = delay_taps_[i] * mod_value * 0.5f;
                 output += delay_line_.Read(delay_taps_[i] + offset) * gain;
-                gain = gain = decay_;
+                gain = gain - decay_;
             }
 
             prev_output_ = output;
@@ -94,7 +94,7 @@ class MultitapDelay
         // Activates taps in increasing order of delay time.
         // Value must be between 1 and the total num_taps
         void SetNumActiveTaps(size_t active_taps) {
-            active_taps_ = Clamp(active_taps, 1, num_taps);
+            active_taps_ = Clamp(active_taps, (size_t) 1, num_taps);
         }
 
         // Returns the maximum delay time in samples.
@@ -102,6 +102,7 @@ class MultitapDelay
         // This prevents a modulated time beyond the length of the buffer.
         size_t GetMaxDelay() { return max_delay / 2; }
 
+        // Returns the maximum available number of taps.
         size_t GetMaxNumTaps() { return num_taps; }
 
     private:

@@ -103,7 +103,7 @@ int main(void)
 
 		hw.SetFootswitchLed((DaisyPetal::FootswitchLed) 0, (float) g_param.effectOn);
 
-		for (int i = 0; i < g_param.voices; i++) {
+		for (size_t i = 0; i < g_param.voices; i++) {
 			hw.SetRingLed((DaisyPetal::RingLed) i, 1.f, 0.f, 0.f);
 		}
 
