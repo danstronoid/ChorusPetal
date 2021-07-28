@@ -1,9 +1,9 @@
 #include "daisy_petal.h"
 #include "daisysp.h"
 
-#include "dingus_dsp/chorus.h"
-#include "dingus_dsp/dingus_math.h"
-#include "dingus_dsp/smooth_value.h"
+#include "dsp/chorus.h"
+#include "dsp/dingus_math.h"
+#include "dsp/smooth_value.h"
 
 using namespace daisy;
 //using namespace daisysp;
