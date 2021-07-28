@@ -3,8 +3,8 @@ TARGET = ChorusPetal
 
 # Sources
 CPP_SOURCES = ChorusPetal.cpp
-CPP_SOURCES += dingus_dsp/modulated_delay.cpp
-CPP_SOURCES += dingus_dsp/oscillator.cpp
+CPP_SOURCES += dsp/modulated_delay.cpp
+CPP_SOURCES += dsp/oscillator.cpp
 
 # Library Locations
 LIBDAISY_DIR = ../../DaisyExamples/libdaisy
