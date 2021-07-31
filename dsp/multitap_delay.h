@@ -34,7 +34,7 @@ class MultitapDelay
         // Writes the input sample to the delay buffer and returns the delayed output.
         float Process(float input) {
             float output = 0.f;
-            float feedback = prev_output_ * feedback_lvl_ / active_taps_;
+            float feedback = prev_output_ * feedback_lvl_;
             delay_line_.Write(input + feedback);
             
             float gain = 1.f;
@@ -47,7 +47,8 @@ class MultitapDelay
                 gain = gain - decay_;
             }
 
-            prev_output_ = output;
+            // Take the feedback line from a single tap.
+            prev_output_ = delay_line_.Read(delay_taps_[0]);
 
             return output;
         }
