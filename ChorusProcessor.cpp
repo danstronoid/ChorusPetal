@@ -5,6 +5,7 @@ ChorusProcessor::ChorusProcessor(daisy::DaisyPetal& hw) : hw_(hw) {}
 void ChorusProcessor::Init() 
 {
     float sample_rate = hw_.AudioSampleRate();
+    chorus_.Init(sample_rate);
     delay_time_.Init(0.01f, sample_rate);
 	depth_.Init(0.01f, sample_rate);
 }
@@ -13,7 +14,7 @@ void ChorusProcessor::ProcessControls()
 {
     hw_.ProcessAllControls();
 
-    bypass_ ^= hw_.switches[0].RisingEdge();
+    engage_ ^= hw_.switches[0].RisingEdge();
 
     mix_ = hw_.knob[0].Process();
     level_ = hw_.knob[1].Process();
@@ -45,7 +46,7 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         out[0][i] = in[0][i];
 		out[1][i] = in[1][i];
 
-        if (!bypass_)
+        if (engage_)
         {
             float chorus_l = chorus_.Process(in[0][i], 0);
             float chorus_r = chorus_.Process(in[1][i], 1);
@@ -53,7 +54,7 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
             out[0][i] = in[0][i] * (1.f - mix_) + (chorus_l - chorus_r) * mix_;
 			out[1][i] = in[1][i] * (1.f - mix_) + (chorus_r - chorus_l) * mix_;
 
-			out[0][i] *= level_;
+            out[0][i] *= level_;
 			out[1][i] *= level_;
         }
     }
@@ -65,7 +66,7 @@ void ChorusProcessor::UpdateLeds() {
 
     // Set bypass led
     hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0, 
-                          static_cast<float>(bypass_));
+                          static_cast<float>(engage_));
 
     // Set encoder ring leds for active voice count
     for (size_t i = 0; i < encoder_pos_; i++)

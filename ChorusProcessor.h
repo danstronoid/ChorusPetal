@@ -15,7 +15,7 @@ class ChorusProcessor
     public:
         // Processor needs a reference to the Daisy hardware object.
         ChorusProcessor(daisy::DaisyPetal& hw);
-        ~ChorusProcessor();
+        ~ChorusProcessor() {}
 
         // Initialize the state of the processor.  
         // Must be called after hardware has been initialized.
@@ -49,8 +49,8 @@ class ChorusProcessor
         // Depth of chorus.
         dingus_dsp::SmoothValue<float> depth_ {};
 
-        // Bypass: effect is engaged if false.
-        bool bypass_ { true };
+        // Engage: effect is on if true.
+        bool engage_ { true };
 
         // Mix of wet/dry signal.
         float mix_ { 0.5f };
