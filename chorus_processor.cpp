@@ -58,11 +58,10 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
 
         if (engage_)
         {
-            float chorus_l = chorus_.Process(in[0][i], 0);
-            float chorus_r = chorus_.Process(in[1][i], 1);
+            chorus_.Process(out[0][i], out[1][i]);
 
-            out[0][i] = in[0][i] * (1.f - mix_) + (chorus_l - chorus_r) * mix_;
-            out[1][i] = in[1][i] * (1.f - mix_) + (chorus_r - chorus_l) * mix_;
+            out[0][i] = in[0][i] * (1.f - mix_) + out[0][i] * mix_;
+            out[1][i] = in[1][i] * (1.f - mix_) + out[1][i] * mix_;
 
             out[0][i] *= level_;
             out[1][i] *= level_;

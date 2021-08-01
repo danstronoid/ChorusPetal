@@ -1,3 +1,13 @@
+/*
+  ==============================================================================
+
+    File: multitap_delay.h
+    Author: Daniel Schwartz
+    Description: A delay line with multiple tabs and a modulation oscillator.
+
+  ==============================================================================
+*/
+
 #pragma once
 #ifndef MULTITAP_DELAY_H
 #define MULTITAP_DELAY_H
@@ -7,10 +17,12 @@
 
 #include "math_helpers.h"
 #include "delayline.h"
+#include "oscillator.h"
 
 namespace dingus_dsp
 {
 
+    // A delay line with multiple taps and a modulation oscillator.
     template <size_t num_taps, size_t max_delay>
     class MultitapDelay
     {

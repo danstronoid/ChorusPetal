@@ -15,7 +15,7 @@
 
 #include "daisy_petal.h"
 
-#include "dsp/chorus.h"
+#include "dsp/chorus_engine.h"
 #include "dsp/math_helpers.h"
 #include "dsp/smooth_value.h"
 
