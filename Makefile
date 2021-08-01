@@ -2,8 +2,8 @@
 TARGET = ChorusPetal
 
 # Sources
-CPP_SOURCES = ChorusPetal.cpp
-CPP_SOURCES += ChorusProcessor.cpp
+CPP_SOURCES = main.cpp
+CPP_SOURCES += chorus_processor.cpp
 CPP_SOURCES += dsp/modulated_delay.cpp
 CPP_SOURCES += dsp/oscillator.cpp
 

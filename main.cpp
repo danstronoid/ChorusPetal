@@ -1,14 +1,14 @@
 #include "daisy_petal.h"
-#include "ChorusProcessor.h"
+#include "chorus_processor.h"
 
 // Must be in global or heap mem
 static daisy::DaisyPetal hw;
 static ChorusProcessor processor(hw);
 
 // A wrapper to call the audio callback using the processor member function.
-void AudioCallbackWrapper(daisy::AudioHandle::InputBuffer in, 
-						  daisy::AudioHandle::OutputBuffer out, 
-						  size_t size) 
+void AudioCallbackWrapper(daisy::AudioHandle::InputBuffer in,
+						  daisy::AudioHandle::OutputBuffer out,
+						  size_t size)
 {
 	processor.AudioCallback(in, out, size);
 }
@@ -22,7 +22,7 @@ int main(void)
 	hw.StartAdc();
 	hw.StartAudio(AudioCallbackWrapper);
 
-	while(1) 
+	while (1)
 	{
 		processor.UpdateLeds();
 	}
