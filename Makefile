@@ -4,7 +4,6 @@ TARGET = ChorusPetal
 # Sources
 CPP_SOURCES = main.cpp
 CPP_SOURCES += chorus_processor.cpp
-CPP_SOURCES += dsp/modulated_delay.cpp
 CPP_SOURCES += dsp/oscillator.cpp
 
 # Library Locations
