@@ -13,7 +13,8 @@
 
 using namespace dingus_dsp;
 
-void ModulatedDelay::Init(float sample_rate) {
+void ModulatedDelay::Init(float sample_rate)
+{
     sample_rate_ = sample_rate;
     osc_.Init(sample_rate);
 
@@ -26,7 +27,8 @@ void ModulatedDelay::Init(float sample_rate) {
     SetDelayTime(0.001f);
 }
 
-float ModulatedDelay::Process(float input) {
+float ModulatedDelay::Process(float input)
+{
     delay_line_.Write(input);
 
     // Modulated time ranges from 0.5dt to 1.5dt
@@ -36,7 +38,8 @@ float ModulatedDelay::Process(float input) {
     return output;
 }
 
-void ModulatedDelay::Reset() {
+void ModulatedDelay::Reset()
+{
     delay_line_.Clear();
     osc_.Reset();
 }

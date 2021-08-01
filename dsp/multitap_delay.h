@@ -5,21 +5,22 @@
 #include <array>
 #include <cstdlib>
 
-#include "dingus_math.h"
+#include "math_helpers.h"
 #include "delayline.h"
 
 namespace dingus_dsp
 {
 
-template<size_t num_taps, size_t max_delay>
-class MultitapDelay 
-{
+    template <size_t num_taps, size_t max_delay>
+    class MultitapDelay
+    {
     public:
         MultitapDelay() {}
         ~MultitapDelay() {}
 
         // Sets the initial state of the delay given the sample rate.
-        void Init(float sample_rate, int random_seed = 666) {
+        void Init(float sample_rate, int random_seed = 666)
+        {
             sample_rate_ = sample_rate;
             osc_.Init(sample_rate_);
             osc_.SetType(OscType::SINE);
@@ -32,34 +33,39 @@ class MultitapDelay
         }
 
         // Writes the input sample to the delay buffer and returns the delayed output.
-        float Process(float input) {
+        float Process(float input)
+        {
             float output = 0.f;
-            float feedback = prev_output_ * feedback_lvl_ / active_taps_;
+            float feedback = prev_output_ * feedback_lvl_;
             delay_line_.Write(input + feedback);
-            
+
             float gain = 1.f;
             float mod_value = osc_.Process();
 
             // Only read and output from the active taps.
-            for (size_t i = 0; i < active_taps_; i++) {
+            for (size_t i = 0; i < active_taps_; i++)
+            {
                 float offset = delay_taps_[i] * mod_value * 0.5f;
                 output += delay_line_.Read(delay_taps_[i] + offset) * gain;
                 gain = gain - decay_;
             }
 
-            prev_output_ = output;
+            // Take the feedback line from a single tap.
+            prev_output_ = delay_line_.Read(delay_taps_[0]);
 
             return output;
         }
 
         // Clears the buffer and resets the oscillator.
-        void Reset() {
+        void Reset()
+        {
             delay_line_.Clear();
             osc_.Reset();
         }
 
         // Set the delay time for each tap based on the target delay.
-        void SetDelayTime(float delay_time) {
+        void SetDelayTime(float delay_time)
+        {
             delay_time = delay_time * sample_rate_;
 
             // Make sure the delay time won't exceed the buffer size.
@@ -68,7 +74,8 @@ class MultitapDelay
             float tap_spacing = delay_time / static_cast<float>(num_taps);
             float tap_time = tap_spacing;
 
-            for (size_t i = 0; i < num_taps; i++) {
+            for (size_t i = 0; i < num_taps; i++)
+            {
                 float spread = tap_spread_[i] * tap_spacing * 0.1f;
                 delay_taps_[i] = tap_time - spread;
                 tap_time += tap_spacing;
@@ -76,25 +83,29 @@ class MultitapDelay
         }
 
         // Set the amount of feedback
-        void SetFeedbackLevel(float feedback_lvl) {
+        void SetFeedbackLevel(float feedback_lvl)
+        {
             feedback_lvl_ = feedback_lvl;
         }
 
         // Sets the rate of the modulation.
-        void SetRate(float rate) {
+        void SetRate(float rate)
+        {
             osc_.SetFrequency(rate);
         }
 
         // Sets the depth of the modulation.
-        void SetDepth(float depth) {
+        void SetDepth(float depth)
+        {
             osc_.SetAmplitude(Clamp<float>(depth, -1.f, 1.f));
         }
 
         // Sets the number of active taps to process.
         // Activates taps in increasing order of delay time.
         // Value must be between 1 and the total num_taps
-        void SetNumActiveTaps(size_t active_taps) {
-            active_taps_ = Clamp(active_taps, (size_t) 1, num_taps);
+        void SetNumActiveTaps(size_t active_taps)
+        {
+            active_taps_ = Clamp(active_taps, (size_t)1, num_taps);
         }
 
         // Returns the maximum delay time in samples.
@@ -119,29 +130,31 @@ class MultitapDelay
         std::array<float, num_taps> tap_spread_;
 
         // The amount by which gain is reduced for each tap.
-        float decay_ {};
+        float decay_{};
 
         // The amount of feedback.
-        float feedback_lvl_ {};
+        float feedback_lvl_{};
 
         // The previous output value.
-        float prev_output_ {};
+        float prev_output_{};
 
         // The audio sample rate.
-        float sample_rate_ {};
+        float sample_rate_{};
 
         // The number of active taps to output.
-        size_t active_taps_ { num_taps };
+        size_t active_taps_{num_taps};
 
         // Calculates a random spread value for each tap.
         // This is done at initialization and the value is seeded with a constant.
         // Thus the spread values will be random but persistent.
-        void CalculateSpread() {
-            for (size_t i = 0; i < num_taps; i++) {
+        void CalculateSpread()
+        {
+            for (size_t i = 0; i < num_taps; i++)
+            {
                 tap_spread_[i] = (static_cast<float>(rand()) / RAND_MAX);
             }
         }
-};
+    };
 
 }
 

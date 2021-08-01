@@ -15,21 +15,21 @@
 
 #include "delayline.h"
 #include "oscillator.h"
-#include "dingus_math.h"
+#include "math_helpers.h"
 
-namespace dingus_dsp 
+namespace dingus_dsp
 {
 
-// A modulated delay line that combines a simple delay line with a modulation source.
-class ModulatedDelay
-{
+    // A modulated delay line that combines a simple delay line with a modulation source.
+    class ModulatedDelay
+    {
     public:
         ModulatedDelay() {}
         ~ModulatedDelay() {}
 
         // This constant determines the size of the internal delay buffer.
         // Sample rate 48kHz: a buffer of size 4800 has a max delay of 100ms.
-        static constexpr size_t MAX_DELAY {4800};
+        static constexpr size_t MAX_DELAY{4800};
 
         // Sets the initial state of the modulated delay given the sample rate.
         void Init(float sample_rate);
@@ -41,7 +41,8 @@ class ModulatedDelay
         void Reset();
 
         // Sets the delay time in seconds.
-        void SetDelayTime(float delay_time) {
+        void SetDelayTime(float delay_time)
+        {
             delay_time = delay_time * sample_rate_;
 
             // Make sure the delay time won't exceed the buffer size.
@@ -49,12 +50,14 @@ class ModulatedDelay
         }
 
         // Sets the rate of the modulation.
-        void SetRate(float rate) {
+        void SetRate(float rate)
+        {
             osc_.SetFrequency(rate);
         }
 
         // Sets the depth of the modulation.
-        void SetDepth(float depth) {
+        void SetDepth(float depth)
+        {
             osc_.SetAmplitude(Clamp<float>(depth, -1.f, 1.f));
         }
 
@@ -65,14 +68,14 @@ class ModulatedDelay
         DelayLine<float, 2 * MAX_DELAY> delay_line_;
 
         // The modulation oscillator.
-        Oscillator osc_;        
+        Oscillator osc_;
 
         // The fractional delay time in samples.
-        float delay_time_ {};
+        float delay_time_{};
 
         // The audio sample rate.
-        float sample_rate_ {};
-};
+        float sample_rate_{};
+    };
 
 }
 
