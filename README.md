@@ -1,12 +1,9 @@
 # Chorus Echo
-
-## Author
-
-Daniel Schwartz
+by Daniel Schwartz
 
 ## Description
 
-A chorus echo effect for the Daisy Seed embedded platform.
+A chorus echo guitar pedal for the Daisy Seed embedded platform.
 
 ## Knobs
 
