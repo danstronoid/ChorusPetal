@@ -13,8 +13,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/../../DaisyExamples/libdaisy/**",
                 "${workspaceFolder}/../../DaisyExamples/DaisySP/**",
-                "C:/Users/Daniel Schwartz/Documents/DaisyExamples/DaisySP/Source",
-                "C:/Users/Daniel Schwartz/Documents/DaisyExamples/libdaisy/src"
+                "${workspaceFolder}/../../DingusDSP/**"
             ],
             "name": "Win32",
             "windowsSdkVersion": "10.0.17763.0"
@@ -31,7 +30,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/../../libDaisy/**",
-                "${workspaceFolder}/../../DaisySP/**"
+                "${workspaceFolder}/../../DaisySP/**",
+                "${workspaceFolder}/../../DingusDSP/**"
             ],
             "name": "macOS"
         }

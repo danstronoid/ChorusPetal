@@ -4,8 +4,14 @@ TARGET = ChorusPetal
 # Sources
 CPP_SOURCES = main.cpp
 CPP_SOURCES += chorus_processor.cpp
-CPP_SOURCES += dsp/chorus_engine.cpp
-CPP_SOURCES += dsp/oscillator.cpp
+
+# Additional source files need to be added manually
+# It's more trouble than its worth to alter the core makefile
+DINGUS_DSP_DIR = ../../DingusDSP/source
+CPP_SOURCES += $(DINGUS_DSP_DIR)/effects/chorus_engine.cpp
+CPP_SOURCES += $(DINGUS_DSP_DIR)/oscillators/oscillator.cpp
+CPP_SOURCES += $(DINGUS_DSP_DIR)/filters/biquad.cpp
+CPP_SOURCES += $(DINGUS_DSP_DIR)/filters/cascade.cpp
 
 # Library Locations
 LIBDAISY_DIR = ../../DaisyExamples/libdaisy

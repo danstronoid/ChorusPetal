@@ -14,10 +14,7 @@
 #define CHORUS_PROCESSOR_H
 
 #include "daisy_petal.h"
-
-#include "dsp/chorus_engine.h"
-#include "dsp/math_helpers.h"
-#include "dsp/smooth_value.h"
+#include "../../DingusDSP/source/dingus_dsp.h"
 
 // Processor class to manage the controls and the audio callback.
 class ChorusProcessor
@@ -51,7 +48,31 @@ private:
     // The chorus audio processor.
     dingus_dsp::Chorus chorus_;
 
+    // Stereo low shelf cut
+    std::array<dingus_dsp::BiquadFilter, 2> cut_filters_;
+
+    // Stereo low shelf boost
+    std::array<dingus_dsp::BiquadFilter, 2> boost_filters_;
+
+    // Stereo lowpass tone filter
+    std::array<dingus_dsp::OnePoleFilter, 2> tone_filters_;
+
+    // Wet/dry mixer
+    dingus_dsp::Mixer mixer_;
+
     // Parameters
+
+    // Maximum boost/cut fitler gain
+    static constexpr float FILTER_GAIN = 3.0f;
+
+    // Fixed boost/cut filter cutoff
+    static constexpr float FILTER_CUTOFF = 220.0f;
+
+    // Fixed boost/cut filter Q
+    static constexpr float FILTER_Q = 0.7071f;
+
+    // Threshold of hardclipping
+    static constexpr float CLIP_THRESH = 1.2f;
 
     // Delay time of chorus.
     dingus_dsp::SmoothValue<float> delay_time_{};
@@ -59,17 +80,34 @@ private:
     // Depth of chorus.
     dingus_dsp::SmoothValue<float> depth_{};
 
+    // Previous system time. Used for tap tempo.
+    uint32_t prev_time_{};
+
+    // Store delay knob value so tap can bypass knob
+    float delay_knob_{};
+
     // Engage: effect is on if true.
     bool engage_{true};
+
+    // True if warp is latched
+    bool warp_latch_{false};
+
+    // True if vibrato mode is on
+    bool vibrato_{false};
+
+    // The amount of warping
+    float warp_factor_{1.f};
 
     // Mix of wet/dry signal.
     float mix_{0.5f};
 
+    float mix_scale_{};
+
     // Master output level.
     float level_{1.f};
 
-    // Number of active voices.
-    size_t encoder_pos_{1};
+    // Tone control
+    float tone_{1.f};
 };
 
 #endif
