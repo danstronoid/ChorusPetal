@@ -27,8 +27,7 @@ A chorus echo guitar pedal for the Daisy Seed embedded platform.
 
 ## TODO
 
-- [ ] Quad mode: implemented, but needs to attach to a switch
-- [ ] Warp mode: implemented, but needs to attach to a switch
-- [ ] Create mono only version for hardware implementation  
+- [x] Quad mode: implemented, but needs to attach to a switch
+- [x] Warp mode: implemented, but needs to attach to a switch
 - [ ] Finish building prototype
 

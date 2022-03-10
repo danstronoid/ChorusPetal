@@ -89,11 +89,8 @@ private:
     // Engage: effect is on if true.
     bool engage_{true};
 
-    // True if warp is latched
-    bool warp_latch_{false};
-
-    // True if vibrato mode is on
-    bool vibrato_{false};
+    // True if quad mode is on
+    bool quad_mode_{false};
 
     // The amount of warping
     float warp_factor_{1.f};
@@ -101,6 +98,7 @@ private:
     // Mix of wet/dry signal.
     float mix_{0.5f};
 
+    // Scale the filter gain based on mix
     float mix_scale_{};
 
     // Master output level.

@@ -42,13 +42,23 @@ void ChorusProcessor::ProcessControls()
     hw_.ProcessAllControls();
 
     // Toggle the bypass state
-    if (!hw_.switches[1].Pressed()) {
-        engage_ ^= hw_.switches[0].RisingEdge();
+    engage_ ^= hw_.switches[0].RisingEdge();
+
+    // Toggle the quad voice mode 
+    if (quad_mode_ != hw_.switches[4].Pressed()) {
+        quad_mode_ = hw_.switches[4].Pressed();
+        size_t num_voices = (quad_mode_) ? 2 : 1;
+        chorus_.SetNumVoices(num_voices);
     }
     
+    // Set the feedback level
+    // Cut the level in half for quad mode
+    float feedback_lvl = hw_.knob[3].Process();
+    feedback_lvl *= (quad_mode_) ? 0.6f : 1.f;
+    chorus_.SetFeedbackLevel(feedback_lvl);
+
     // Set the warp factor based on the switch state
-    warp_latch_ ^= hw_.switches[1].Pressed() && hw_.switches[0].RisingEdge();
-    warp_factor_ = (hw_.switches[1].Pressed() || warp_latch_) ? 100.f : 1.f;
+    warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
     depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
 
     // Set delay time using tap tempo
@@ -73,19 +83,19 @@ void ChorusProcessor::ProcessControls()
     mix_ = hw_.knob[0].Process();
     mixer_.SetMix(mix_);
 
-    // Gaussian distribution
+    // Gaussian distribution to scale the cut/boost filters
+    // The filters not active at 0% and 100% mix
     mix_scale_ = expf(-1.0f * (mix_ - 0.5) * (mix_ - 0.5) / 0.02f); 
-    
-    // level_ = hw_.knob[1].Process();
+
+    // Set the tone filter cutoff
     tone_ = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, hw_.knob[1].Process());
 
+    // Update all filters
     for (int i = 0; i < 2; i++) {
         cut_filters_[i].SetGain(mix_scale_ * FILTER_GAIN * -1.0f);
         boost_filters_[i].SetGain(mix_scale_ * FILTER_GAIN);
         tone_filters_[i].SetFreq(tone_);
     }
-
-    chorus_.SetFeedbackLevel(hw_.knob[3].Process());
 
     // Rate scales from .01Hz - 20Hz
     float rate_knob = hw_.knob[4].Process();
@@ -136,13 +146,9 @@ void ChorusProcessor::UpdateLeds()
     hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0,
                          static_cast<float>(engage_ || hw_.switches[0].Pressed()));
 
-
-    // Warp light is toggled off when latch is enabled/disabled
-    bool warp_light = (warp_latch_ || hw_.switches[1].Pressed()) && !hw_.switches[0].Pressed();
-
-    // Warp led on while pressed
+    // Tap tempo led on while pressed
     hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,
-                         static_cast<float>(warp_light));
+                         static_cast<float>(hw_.switches[1].Pressed()));
 
     hw_.UpdateLeds();
 }
