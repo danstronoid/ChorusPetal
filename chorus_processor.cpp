@@ -27,6 +27,9 @@ void ChorusProcessor::Init()
         boost_filters_[i].Init(sample_rate, dingus_dsp::BiquadType::LowShelf);
         boost_filters_[i].SetParams(FILTER_CUTOFF, FILTER_Q, 0.0f);
 
+        hipass_filters_[i].Init(sample_rate, dingus_dsp::BiquadType::HighPass);
+        hipass_filters_[i].SetParams(110.f, FILTER_Q, 0.0f);
+
         tone_filters_[i].Init(sample_rate, dingus_dsp::OnePoleType::LowPass);
     }
 
@@ -37,29 +40,22 @@ void ChorusProcessor::Init()
     depth_.Init(0.025f, sample_rate);
 }
 
+/* -------------------------------------------------------------------------- */
+
 void ChorusProcessor::ProcessControls()
 {
     hw_.ProcessAllControls();
 
-    // Toggle the bypass state
-    engage_ ^= hw_.switches[0].RisingEdge();
+    /* ---------------------------- Switch Behaviour ---------------------------- */
 
-    // Toggle the quad voice mode 
-    if (quad_mode_ != hw_.switches[4].Pressed()) {
-        quad_mode_ = hw_.switches[4].Pressed();
-        size_t num_voices = (quad_mode_) ? 2 : 1;
-        chorus_.SetNumVoices(num_voices);
+    // Reset the delay time to chorus value and ignore tap tempo
+    if (hw_.switches[1].Pressed() && hw_.switches[0].RisingEdge()) {
+        delay_time_.SetTargetValue(chorus_.GetMinDelay());
+        prev_time_ = 0.f;
+    } else {
+        // Otherwise toggle the bypass state
+        engage_ ^= hw_.switches[0].RisingEdge();
     }
-    
-    // Set the feedback level
-    // Cut the level in half for quad mode
-    float feedback_lvl = hw_.knob[3].Process();
-    feedback_lvl *= (quad_mode_) ? 0.6f : 1.f;
-    chorus_.SetFeedbackLevel(feedback_lvl);
-
-    // Set the warp factor based on the switch state
-    warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
-    depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
 
     // Set delay time using tap tempo
     if (hw_.switches[1].RisingEdge()) {
@@ -72,6 +68,32 @@ void ChorusProcessor::ProcessControls()
         }
     }
 
+    // Toggle the high pass filters
+    hipass_engage_ = hw_.switches[5].Pressed();
+
+    // Toggle between tri and sine waveforms
+    if (tri_mode_ != hw_.switches[4].Pressed()) {
+        tri_mode_ = hw_.switches[4].Pressed();
+
+        if (tri_mode_) {
+            chorus_.SetOscType(dingus_dsp::LfoType::STRI);
+        } else {
+            chorus_.SetOscType(dingus_dsp::LfoType::SINE);
+        }
+    }
+
+    /* ----------------------------- Knob Behaviour ----------------------------- */
+    
+    // Set the feedback level
+    // Cut the level in half for quad mode
+    float feedback_lvl = hw_.knob[3].Process();
+    chorus_.SetFeedbackLevel(feedback_lvl);
+
+    // Set the warp factor based on the switch state
+    // warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
+    // depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
+    depth_.SetTargetValue(hw_.knob[5].Process());
+
     // Update delay time only if the knob was moved
     float knob_2 = hw_.knob[2].Process();
     if (!dingus_dsp::CompareFloat(delay_knob_, knob_2, 0.001f)) {
@@ -79,10 +101,12 @@ void ChorusProcessor::ProcessControls()
         delay_time_.SetTargetValue(chorus_.GetMinDelay() + delay_knob_ * chorus_.GetMaxDelay());
     }
 
-    // The cut/boost filter gain scales as mix increases
+    // If the mix is sufficently small, round it to zero
     mix_ = hw_.knob[0].Process();
+    if (mix_ < 0.001f) mix_ = 0.f;
     mixer_.SetMix(mix_);
 
+    // The cut/boost filter gain scales as mix increases
     // Gaussian distribution to scale the cut/boost filters
     // The filters not active at 0% and 100% mix
     mix_scale_ = expf(-1.0f * (mix_ - 0.5) * (mix_ - 0.5) / 0.02f); 
@@ -100,8 +124,9 @@ void ChorusProcessor::ProcessControls()
     // Rate scales from .01Hz - 20Hz
     float rate_knob = hw_.knob[4].Process();
     chorus_.SetRate(dingus_dsp::QuadraticScale(0.1f, 10.0f, rate_knob));
-
 }
+
+/* -------------------------------------------------------------------------- */
 
 void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
                                     daisy::AudioHandle::OutputBuffer out,
@@ -124,12 +149,18 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         wet_l = tone_filters_[0].Process(wet_l);
         wet_r = tone_filters_[1].Process(wet_r);
 
+        if (hipass_engage_)
+        {
+            wet_l = hipass_filters_[0].Process(wet_l);
+            wet_r = hipass_filters_[1].Process(wet_r);
+        }
+
         dry_l = boost_filters_[0].Process(in[0][i]);
         dry_r = boost_filters_[1].Process(in[1][i]);
 
         if (engage_) {
-            out[0][i] = dingus_dsp::SoftClip::Sinusoidal(mixer_.Process(dry_l, wet_l - wet_r * mix_scale_), CLIP_THRESH);
-            out[1][i] = dingus_dsp::SoftClip::Sinusoidal(mixer_.Process(dry_r, wet_r - wet_l * mix_scale_), CLIP_THRESH);
+            out[0][i] = mixer_.Process(dry_l, dingus_dsp::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH));
+            out[1][i] = mixer_.Process(dry_r, dingus_dsp::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH));
         } else {
             out[0][i] = in[0][i];
             out[1][i] = in[1][i];
@@ -137,14 +168,22 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
     }
 }
 
+/* -------------------------------------------------------------------------- */
+
 void ChorusProcessor::UpdateLeds()
 {
     hw_.DelayMs(6);
     hw_.ClearLeds();
 
     // Set bypass led
-    hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0,
-                         static_cast<float>(engage_ || hw_.switches[0].Pressed()));
+    if (hw_.switches[0].Pressed()) {
+        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0, 1.f);
+    } else {
+        float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
+        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0,
+                            static_cast<float>(engage_) * amt);
+    }
+    
 
     // Tap tempo led on while pressed
     hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,

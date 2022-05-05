@@ -54,6 +54,9 @@ private:
     // Stereo low shelf boost
     std::array<dingus_dsp::BiquadFilter, 2> boost_filters_;
 
+    // Stereo high pass filters
+    std::array<dingus_dsp::BiquadFilter, 2> hipass_filters_;
+
     // Stereo lowpass tone filter
     std::array<dingus_dsp::OnePoleFilter, 2> tone_filters_;
 
@@ -84,16 +87,20 @@ private:
     uint32_t prev_time_{};
 
     // Store delay knob value so tap can bypass knob
-    float delay_knob_{};
+    // Set this negative to force an initialization
+    float delay_knob_{ -1.f };
 
     // Engage: effect is on if true.
     bool engage_{true};
 
-    // True if quad mode is on
-    bool quad_mode_{false};
+    // True if tri chorus mode is on
+    bool tri_mode_{false};
 
     // The amount of warping
-    float warp_factor_{1.f};
+    // float warp_factor_{1.f};
+
+    // True if high pass filter is on
+    bool hipass_engage_{false};
 
     // Mix of wet/dry signal.
     float mix_{0.5f};
