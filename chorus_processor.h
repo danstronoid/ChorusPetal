@@ -14,7 +14,10 @@
 #define CHORUS_PROCESSOR_H
 
 #include "daisy_petal.h"
+#include "terrarium.h"
 #include "../../DingusDSP/source/dingus_dsp.h"
+
+using namespace terrarium;
 
 // Processor class to manage the controls and the audio callback.
 class ChorusProcessor
@@ -44,6 +47,9 @@ public:
 private:
     // Reference to the daisy hardware.
     daisy::DaisyPetal &hw_;
+
+    daisy::Led led1_;
+    daisy::Led led2_;
 
     // The chorus audio processor.
     dingus_dsp::Chorus chorus_;
@@ -92,6 +98,10 @@ private:
 
     // Engage: effect is on if true.
     bool engage_{true};
+
+    // Keep track of the state of fs2 to find the rising edge
+    // This is a hack for using the wrong switches
+    bool fs2_state_{false};
 
     // True if tri chorus mode is on
     bool tri_mode_{false};

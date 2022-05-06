@@ -15,6 +15,11 @@ ChorusProcessor::ChorusProcessor(daisy::DaisyPetal &hw) : hw_(hw) {}
 void ChorusProcessor::Init()
 {
     float sample_rate = hw_.AudioSampleRate();
+
+    // Initialize the terrarium leds
+    led1_.Init(hw_.seed.GetPin(Terrarium::L_1), false);
+    led2_.Init(hw_.seed.GetPin(Terrarium::L_2), false);
+
     chorus_.Init(sample_rate);
     chorus_.SetDelayRange(0.005f, 1.f, 0.005f);
     chorus_.SetNumVoices(1);
@@ -48,17 +53,17 @@ void ChorusProcessor::ProcessControls()
 
     /* ---------------------------- Switch Behaviour ---------------------------- */
 
-    // Reset the delay time to chorus value and ignore tap tempo
-    if (hw_.switches[1].Pressed() && hw_.switches[0].RisingEdge()) {
+    /* // Reset the delay time to chorus value and ignore tap tempo
+    if (hw_.switches[Terrarium::FS_2].Pressed() && hw_.switches[Terrarium::FS_1].RisingEdge()) {
         delay_time_.SetTargetValue(chorus_.GetMinDelay());
         prev_time_ = 0.f;
     } else {
         // Otherwise toggle the bypass state
-        engage_ ^= hw_.switches[0].RisingEdge();
+        engage_ ^= hw_.switches[Terrarium::FS_1].RisingEdge();
     }
 
     // Set delay time using tap tempo
-    if (hw_.switches[1].RisingEdge()) {
+    if (hw_.switches[Terrarium::FS_2].RisingEdge()) {
         uint32_t curr_time = daisy::System::GetNow();
         uint32_t delay_ms = curr_time - prev_time_;
         prev_time_ = curr_time;
@@ -66,14 +71,37 @@ void ChorusProcessor::ProcessControls()
         if (delay_ms < (chorus_.GetMaxDelay() * 1000)) {
             delay_time_.SetTargetValue(delay_ms * 0.001f);
         }
-    }
+    } */
+
+    // This is a hack since I bought the wrong switches :/
+    // Toggle the bypass state
+    engage_ = hw_.switches[Terrarium::FS_1].Pressed();
+    led1_.Set(engage_ ? 1.f : 0.f);
+
+    float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
+    led2_.Set(amt);
+    
+    led1_.Update();
+    led2_.Update();
+
+    // Set delay time using tap tempo
+    if (fs2_state_ != hw_.switches[Terrarium::FS_2].Pressed()) {
+        fs2_state_ = hw_.switches[Terrarium::FS_2].Pressed();
+        uint32_t curr_time = daisy::System::GetNow();
+        uint32_t delay_ms = curr_time - prev_time_;
+        prev_time_ = curr_time;
+
+        if (delay_ms < (chorus_.GetMaxDelay() * 1000)) {
+            delay_time_.SetTargetValue(delay_ms * 0.001f);
+        }
+    } 
 
     // Toggle the high pass filters
-    hipass_engage_ = hw_.switches[5].Pressed();
+    hipass_engage_ = hw_.switches[Terrarium::S_4].Pressed();
 
     // Toggle between tri and sine waveforms
-    if (tri_mode_ != hw_.switches[4].Pressed()) {
-        tri_mode_ = hw_.switches[4].Pressed();
+    if (tri_mode_ != hw_.switches[Terrarium::S_1].Pressed()) {
+        tri_mode_ = hw_.switches[Terrarium::S_1].Pressed();
 
         if (tri_mode_) {
             chorus_.SetOscType(dingus_dsp::LfoType::STRI);
@@ -83,26 +111,9 @@ void ChorusProcessor::ProcessControls()
     }
 
     /* ----------------------------- Knob Behaviour ----------------------------- */
-    
-    // Set the feedback level
-    // Cut the level in half for quad mode
-    float feedback_lvl = hw_.knob[3].Process();
-    chorus_.SetFeedbackLevel(feedback_lvl);
-
-    // Set the warp factor based on the switch state
-    // warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
-    // depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
-    depth_.SetTargetValue(hw_.knob[5].Process());
-
-    // Update delay time only if the knob was moved
-    float knob_2 = hw_.knob[2].Process();
-    if (!dingus_dsp::CompareFloat(delay_knob_, knob_2, 0.001f)) {
-        delay_knob_ = knob_2;
-        delay_time_.SetTargetValue(chorus_.GetMinDelay() + delay_knob_ * chorus_.GetMaxDelay());
-    }
 
     // If the mix is sufficently small, round it to zero
-    mix_ = hw_.knob[0].Process();
+    mix_ = hw_.knob[Terrarium::K_1].Process();
     if (mix_ < 0.001f) mix_ = 0.f;
     mixer_.SetMix(mix_);
 
@@ -112,7 +123,7 @@ void ChorusProcessor::ProcessControls()
     mix_scale_ = expf(-1.0f * (mix_ - 0.5) * (mix_ - 0.5) / 0.02f); 
 
     // Set the tone filter cutoff
-    tone_ = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, hw_.knob[1].Process());
+    tone_ = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, hw_.knob[Terrarium::K_2].Process());
 
     // Update all filters
     for (int i = 0; i < 2; i++) {
@@ -121,9 +132,27 @@ void ChorusProcessor::ProcessControls()
         tone_filters_[i].SetFreq(tone_);
     }
 
+    // Update delay time only if the knob was moved
+    float k_val = hw_.knob[Terrarium::K_3].Process();
+    if (!dingus_dsp::CompareFloat(delay_knob_, k_val, 0.001f)) {
+        delay_knob_ = k_val;
+        delay_time_.SetTargetValue(chorus_.GetMinDelay() + delay_knob_ * chorus_.GetMaxDelay());
+    }
+
+    // Set the feedback level
+    // Cut the level in half for quad mode
+    float feedback_lvl = hw_.knob[Terrarium::K_4].Process();
+    chorus_.SetFeedbackLevel(feedback_lvl);
+
+
     // Rate scales from .01Hz - 20Hz
-    float rate_knob = hw_.knob[4].Process();
+    float rate_knob = hw_.knob[Terrarium::K_5].Process();
     chorus_.SetRate(dingus_dsp::QuadraticScale(0.1f, 10.0f, rate_knob));
+
+    // Set the warp factor based on the switch state
+    // warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
+    // depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
+    depth_.SetTargetValue(hw_.knob[Terrarium::K_6].Process());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -173,21 +202,26 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
 void ChorusProcessor::UpdateLeds()
 {
     hw_.DelayMs(6);
-    hw_.ClearLeds();
+    //hw_.ClearLeds();
+    //led1_.Set(0.f);
+    //led2_.Set(0.f);
 
     // Set bypass led
-    if (hw_.switches[0].Pressed()) {
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0, 1.f);
+    /* if (hw_.switches[Terrarium::FS_1].Pressed()) {
+        led1_.Set(1.f);
     } else {
         float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0,
-                            static_cast<float>(engage_) * amt);
+        if (engage_)
+            led1_.Set(amt);
+        else
+            led1_.Set(0.f);
     }
     
-
     // Tap tempo led on while pressed
-    hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,
-                         static_cast<float>(hw_.switches[1].Pressed()));
-
-    hw_.UpdateLeds();
+    if (hw_.switches[Terrarium::FS_2].Pressed())
+    {
+        led2_.Set(1.f);
+    } else {
+        led2_.Set(0.f);
+    } */
 }
