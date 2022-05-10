@@ -89,9 +89,7 @@ void ChorusProcessor::ProcessControls()
     float feedback_lvl = hw_.knob[3].Process();
     chorus_.SetFeedbackLevel(feedback_lvl);
 
-    // Set the warp factor based on the switch state
-    // warp_factor_ = (hw_.switches[5].Pressed()) ? 100.f : 1.f;
-    // depth_.SetTargetValue(hw_.knob[5].Process() * warp_factor_);
+    // Set the depth. Might be cool to increase this beyond 1.
     depth_.SetTargetValue(hw_.knob[5].Process());
 
     // Update delay time only if the knob was moved
@@ -112,13 +110,14 @@ void ChorusProcessor::ProcessControls()
     mix_scale_ = expf(-1.0f * (mix_ - 0.5) * (mix_ - 0.5) / 0.02f); 
 
     // Set the tone filter cutoff
-    tone_ = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, hw_.knob[1].Process());
+    lofi_ = hw_.knob[1].Process();
+    float tone = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, 1.f - lofi_);
 
     // Update all filters
     for (int i = 0; i < 2; i++) {
         cut_filters_[i].SetGain(mix_scale_ * FILTER_GAIN * -1.0f);
         boost_filters_[i].SetGain(mix_scale_ * FILTER_GAIN);
-        tone_filters_[i].SetFreq(tone_);
+        tone_filters_[i].SetFreq(tone);
     }
 
     // Rate scales from .01Hz - 20Hz
@@ -159,8 +158,8 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         dry_r = boost_filters_[1].Process(in[1][i]);
 
         if (engage_) {
-            out[0][i] = mixer_.Process(dry_l, dingus_dsp::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH));
-            out[1][i] = mixer_.Process(dry_r, dingus_dsp::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH));
+            out[0][i] = mixer_.Process(dry_l, dingus_dsp::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
+            out[1][i] = mixer_.Process(dry_r, dingus_dsp::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
         } else {
             out[0][i] = in[0][i];
             out[1][i] = in[1][i];
@@ -184,10 +183,17 @@ void ChorusProcessor::UpdateLeds()
                             static_cast<float>(engage_) * amt);
     }
     
+    // The tap tempo led blinks to indicate the delay value
+    if (delay_counter_ < 0.006f) {
+        delay_counter_ = delay_time_.GetValue();
+        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1, 1.f);
+    } else {
+        delay_counter_ -= 0.006f;
 
-    // Tap tempo led on while pressed
-    hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,
-                         static_cast<float>(hw_.switches[1].Pressed()));
+        // Tap tempo led on while pressed
+        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,
+                            static_cast<float>(hw_.switches[1].Pressed()));
+    }
 
     hw_.UpdateLeds();
 }

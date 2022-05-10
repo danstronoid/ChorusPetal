@@ -86,6 +86,9 @@ private:
     // Previous system time. Used for tap tempo.
     uint32_t prev_time_{};
 
+    // Use for led delay indicator
+    float delay_counter_{};
+
     // Store delay knob value so tap can bypass knob
     // Set this negative to force an initialization
     float delay_knob_{ -1.f };
@@ -95,9 +98,6 @@ private:
 
     // True if tri chorus mode is on
     bool tri_mode_{false};
-
-    // The amount of warping
-    // float warp_factor_{1.f};
 
     // True if high pass filter is on
     bool hipass_engage_{false};
@@ -111,8 +111,8 @@ private:
     // Master output level.
     float level_{1.f};
 
-    // Tone control
-    float tone_{1.f};
+    // Lofi control
+    float lofi_{};
 };
 
 #endif
