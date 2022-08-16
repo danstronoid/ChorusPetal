@@ -1,8 +1,5 @@
 make.exe --dry-run --keep-going --print-directory
 make: Entering directory 'c:/Users/Daniel Schwartz/Documents/DaisyProjects/ChorusPetal'
-arm-none-eabi-g++  build/startup_stm32h750xx.o build/main.o build/chorus_processor.o build/chorus_engine.o build/lfo.o build/biquad.o build/cascade.o  -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard --specs=nano.specs --specs=nosys.specs -T../../DaisyExamples/libdaisy/core/STM32H750IB_flash.lds -L../../DaisyExamples/libdaisy/build -L ../../DaisyExamples/DaisySP/build -ldaisy -lc -lm -lnosys -ldaisysp -Wl,-Map=build/ChorusPetal.map,--cref -Wl,--gc-sections -Wl,--print-memory-usage -o build/ChorusPetal.elf
- 
-arm-none-eabi-objcopy -O ihex build/ChorusPetal.elf build/ChorusPetal.hex
-arm-none-eabi-objcopy -O binary -S build/ChorusPetal.elf build/ChorusPetal.bin
+make: Nothing to be done for 'all'.
 make: Leaving directory 'c:/Users/Daniel Schwartz/Documents/DaisyProjects/ChorusPetal'
  
