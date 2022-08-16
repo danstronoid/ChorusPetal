@@ -14,6 +14,7 @@
 #define CHORUS_PROCESSOR_H
 
 #include "daisy_petal.h"
+#include "terrarium.h"
 #include "../../DingusDSP/source/dingus_dsp.h"
 
 // Processor class to manage the controls and the audio callback.
@@ -28,8 +29,11 @@ public:
     // Must be called after hardware has been initialized.
     void Init();
 
-    // Process all analog and digital controls.
-    void ProcessControls();
+    // Switches should be processed at a slower rate to avoid extra triggers
+    void ProcessSwitches();
+
+    // Knobs should be processed at audio rate
+    void ProcessKnobs();
 
     // The audio callback function to process incoming audio
     // Note: this needs to be passed to a C-style library callback
@@ -44,6 +48,12 @@ public:
 private:
     // Reference to the daisy hardware.
     daisy::DaisyPetal &hw_;
+
+    // Bypass indicator led
+    daisy::Led led1_;
+
+    // Tempo indicator led
+    daisy::Led led2_;
 
     // The chorus audio processor.
     dingus_dsp::Chorus chorus_;
@@ -93,8 +103,12 @@ private:
     // Set this negative to force an initialization
     float delay_knob_{ -1.f };
 
-    // Engage: effect is on if true.
-    bool engage_{true};
+    // Engage fs1: effect is on if true.
+    bool engage_fs1_{true};
+
+    // Engage fs2: maintain the state of fs2
+    // This is a hack since I bought the wrong switches
+    bool engage_fs2_{true};
 
     // True if tri chorus mode is on
     bool tri_mode_{false};

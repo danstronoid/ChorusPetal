@@ -17,6 +17,9 @@ void AudioCallbackWrapper(daisy::AudioHandle::InputBuffer in,
 int main(void)
 {
 	hw.Init();
+	hw.seed.SetAudioBlockSize(1);
+	hw.seed.SetAudioSampleRate(daisy::SaiHandle::Config::SampleRate::SAI_48KHZ);
+
 	processor.Init();
 
 	hw.StartAdc();
@@ -24,6 +27,9 @@ int main(void)
 
 	while (1)
 	{
+		hw.DelayMs(6);
+		
+		processor.ProcessSwitches();
 		processor.UpdateLeds();
 	}
 }

@@ -10,11 +10,17 @@
 
 #include "chorus_processor.h"
 
+using namespace terrarium;
+
 ChorusProcessor::ChorusProcessor(daisy::DaisyPetal &hw) : hw_(hw) {}
 
 void ChorusProcessor::Init()
 {
     float sample_rate = hw_.AudioSampleRate();
+
+    led1_.Init(hw_.seed.GetPin(Terrarium::LED_1), false);
+    led2_.Init(hw_.seed.GetPin(Terrarium::LED_2), false);
+
     chorus_.Init(sample_rate);
     chorus_.SetDelayRange(0.005f, 1.f, 0.005f);
     chorus_.SetNumVoices(1);
@@ -42,38 +48,36 @@ void ChorusProcessor::Init()
 
 /* -------------------------------------------------------------------------- */
 
-void ChorusProcessor::ProcessControls()
+void ChorusProcessor::ProcessSwitches()
 {
-    hw_.ProcessAllControls();
-
-    /* ---------------------------- Switch Behaviour ---------------------------- */
+    hw_.ProcessDigitalControls();
 
     // Reset the delay time to chorus value and ignore tap tempo
-    if (hw_.switches[1].Pressed() && hw_.switches[0].RisingEdge()) {
+    if (hw_.switches[Terrarium::FOOTSWITCH_2].Pressed() && hw_.switches[Terrarium::FOOTSWITCH_1].RisingEdge()) {
         delay_time_.SetTargetValue(chorus_.GetMinDelay());
         prev_time_ = 0.f;
     } else {
         // Otherwise toggle the bypass state
-        engage_ ^= hw_.switches[0].RisingEdge();
+        engage_fs1_ ^= hw_.switches[Terrarium::FOOTSWITCH_1].RisingEdge();
     }
 
     // Set delay time using tap tempo
-    if (hw_.switches[1].RisingEdge()) {
+    if (hw_.switches[Terrarium::FOOTSWITCH_2].RisingEdge()) {
         uint32_t curr_time = daisy::System::GetNow();
         uint32_t delay_ms = curr_time - prev_time_;
         prev_time_ = curr_time;
 
-        if (delay_ms < (chorus_.GetMaxDelay() * 1000)) {
+        if (delay_ms > 0 && delay_ms < (chorus_.GetMaxDelay() * 1000)) {
             delay_time_.SetTargetValue(delay_ms * 0.001f);
         }
     }
 
     // Toggle the high pass filters
-    hipass_engage_ = hw_.switches[5].Pressed();
+    hipass_engage_ = hw_.switches[Terrarium::SWITCH_4].Pressed();
 
     // Toggle between tri and sine waveforms
-    if (tri_mode_ != hw_.switches[4].Pressed()) {
-        tri_mode_ = hw_.switches[4].Pressed();
+    if (tri_mode_ != hw_.switches[Terrarium::SWITCH_1].Pressed()) {
+        tri_mode_ = hw_.switches[Terrarium::SWITCH_1].Pressed();
 
         if (tri_mode_) {
             chorus_.SetOscType(dingus_dsp::LfoType::STRI);
@@ -81,26 +85,28 @@ void ChorusProcessor::ProcessControls()
             chorus_.SetOscType(dingus_dsp::LfoType::SINE);
         }
     }
+}
 
-    /* ----------------------------- Knob Behaviour ----------------------------- */
-    
+void ChorusProcessor::ProcessKnobs()
+{
+    hw_.ProcessAnalogControls();
+
     // Set the feedback level
-    // Cut the level in half for quad mode
-    float feedback_lvl = hw_.knob[3].Process();
+    float feedback_lvl = hw_.knob[Terrarium::KNOB_4].Process();
     chorus_.SetFeedbackLevel(feedback_lvl);
 
     // Set the depth. Might be cool to increase this beyond 1.
-    depth_.SetTargetValue(hw_.knob[5].Process());
+    depth_.SetTargetValue(hw_.knob[Terrarium::KNOB_6].Process());
 
     // Update delay time only if the knob was moved
-    float knob_2 = hw_.knob[2].Process();
-    if (!dingus_dsp::CompareFloat(delay_knob_, knob_2, 0.001f)) {
-        delay_knob_ = knob_2;
+    float knob3 = hw_.knob[Terrarium::KNOB_3].Process();
+    if (!dingus_dsp::CompareFloat(delay_knob_, knob3, 0.001f)) {
+        delay_knob_ = knob3;
         delay_time_.SetTargetValue(chorus_.GetMinDelay() + delay_knob_ * chorus_.GetMaxDelay());
     }
 
     // If the mix is sufficently small, round it to zero
-    mix_ = hw_.knob[0].Process();
+    mix_ = hw_.knob[Terrarium::KNOB_1].Process();
     if (mix_ < 0.001f) mix_ = 0.f;
     mixer_.SetMix(mix_);
 
@@ -110,7 +116,7 @@ void ChorusProcessor::ProcessControls()
     mix_scale_ = expf(-1.0f * (mix_ - 0.5) * (mix_ - 0.5) / 0.02f); 
 
     // Set the tone filter cutoff
-    lofi_ = hw_.knob[1].Process();
+    lofi_ = hw_.knob[Terrarium::KNOB_2].Process();
     float tone = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, 1.f - lofi_);
 
     // Update all filters
@@ -121,7 +127,7 @@ void ChorusProcessor::ProcessControls()
     }
 
     // Rate scales from .01Hz - 20Hz
-    float rate_knob = hw_.knob[4].Process();
+    float rate_knob = hw_.knob[Terrarium::KNOB_5].Process();
     chorus_.SetRate(dingus_dsp::QuadraticScale(0.1f, 10.0f, rate_knob));
 }
 
@@ -131,7 +137,18 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
                                     daisy::AudioHandle::OutputBuffer out,
                                     size_t size)
 {
-    ProcessControls();
+	ProcessKnobs();
+
+    // Set bypass led
+    // This is being updated here for faster pwm
+    if (engage_fs1_) {
+        float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
+        led1_.Set(amt);
+    } else {
+        led1_.Set(0.f);
+    }
+
+    led1_.Update();
 
     float wet_l, wet_r, dry_l, dry_r = 0.0f;
 
@@ -140,7 +157,7 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         chorus_.SetDepth(depth_.GetNextValue());
 
         wet_l = cut_filters_[0].Process(in[0][i]);
-        wet_r = cut_filters_[1].Process(in[1][i]);
+        wet_r = cut_filters_[1].Process(in[0][i]);
 
         wet_l = chorus_.Process(wet_l, 0);
         wet_r = chorus_.Process(wet_r, 1);
@@ -157,7 +174,7 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         dry_l = boost_filters_[0].Process(in[0][i]);
         dry_r = boost_filters_[1].Process(in[1][i]);
 
-        if (engage_) {
+        if (engage_fs1_) {
             out[0][i] = mixer_.Process(dry_l, dingus_dsp::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
             out[1][i] = mixer_.Process(dry_r, dingus_dsp::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
         } else {
@@ -170,30 +187,15 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
 /* -------------------------------------------------------------------------- */
 
 void ChorusProcessor::UpdateLeds()
-{
-    hw_.DelayMs(6);
-    hw_.ClearLeds();
-
-    // Set bypass led
-    if (hw_.switches[0].Pressed()) {
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0, 1.f);
-    } else {
-        float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 0,
-                            static_cast<float>(engage_) * amt);
-    }
-    
+{    
     // The tap tempo led blinks to indicate the delay value
     if (delay_counter_ < 0.006f) {
         delay_counter_ = delay_time_.GetValue();
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1, 1.f);
+        led2_.Set(1.f);
     } else {
         delay_counter_ -= 0.006f;
-
-        // Tap tempo led on while pressed
-        hw_.SetFootswitchLed((daisy::DaisyPetal::FootswitchLed) 1,
-                            static_cast<float>(hw_.switches[1].Pressed()));
+        led2_.Set(0.f);
     }
 
-    hw_.UpdateLeds();
+    led2_.Update();
 }
