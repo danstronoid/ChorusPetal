@@ -142,7 +142,7 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
     // Set bypass led
     // This is being updated here for faster pwm
     if (engage_fs1_) {
-        float amt = chorus_.GetLfoValue() * 0.49f + 1.f;
+        float amt = (chorus_.GetLfoValue() + 1.f) * 0.49f;
         led1_.Set(amt);
     } else {
         led1_.Set(0.f);

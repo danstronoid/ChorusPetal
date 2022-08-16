@@ -7,11 +7,12 @@ CPP_SOURCES += chorus_processor.cpp
 
 # Additional source files need to be added manually
 # It's more trouble than its worth to alter the core makefile
-DINGUS_DSP_DIR = ../../DingusDSP/source
-CPP_SOURCES += $(DINGUS_DSP_DIR)/effects/chorus_engine.cpp
-CPP_SOURCES += $(DINGUS_DSP_DIR)/oscillators/lfo.cpp
-CPP_SOURCES += $(DINGUS_DSP_DIR)/filters/biquad.cpp
-CPP_SOURCES += $(DINGUS_DSP_DIR)/filters/cascade.cpp
+BARK_DIR = ../../BarkLib/source
+CPP_SOURCES += $(BARK_DIR)/effects/chorus_engine.cpp
+CPP_SOURCES += $(BARK_DIR)/oscillators/lfo.cpp
+CPP_SOURCES += $(BARK_DIR)/filters/biquad.cpp
+CPP_SOURCES += $(BARK_DIR)/filters/cascade.cpp
+CPP_SOURCES += $(BARK_DIR)/filters/one_pole.cpp
 
 # Library Locations
 LIBDAISY_DIR = ../../DaisyExamples/libdaisy
