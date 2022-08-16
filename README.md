@@ -1,19 +1,19 @@
-# Chorus Echo
+# Labrador - Chorus Echo
 by Daniel Schwartz
 
 ## Description
 
-A chorus echo guitar pedal for the Daisy Seed embedded platform.
+A chorus echo guitar pedal for the Daisy Seed embedded platform.  Implemented in hardware using the terrarium PCB design.
 
 ## Knobs
 
-1. Wet/Dry Mix
+1. Mix
     - Controls the mix between the dry and processed signal.  This ranges from vibrato at 100% wet (fully clockwise) to chorus at 50%.
-2. Tone
-    - A subtle tone control for the processed signal.  This rolls off high-end from the processed signal as it is turned counter-clockwise.  The dry signal will remain unaffected.
-3. Delay Time
+2. Lofi
+    - A tone control that also adds some subtle saturation.
+3. Delay
     - Sets the delay time ranging from a short chorus at full counter-clockwise to 1 second at full clockwise.
-4. Feedback
+4. Density
     - Sets the feedback amount for the delay line.  This will begin to self-oscillate at full clockwise.
 5. Rate
     - Sets the rate of the modulation.  Ranges from .1Hz to 10Hz.
@@ -34,6 +34,5 @@ Holding tap and pressing bypss will reset the delay time to a short chorus delay
 
 ## TODO
 
-- [ ] Finish building prototype
-- [ ] Change led and switch mappings for terrarium
+- [ ] Design a stereo PCB
 
