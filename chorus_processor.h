@@ -111,7 +111,7 @@ private:
     bool engage_fs2_{true};
 
     // True if tri chorus mode is on
-    bool tri_mode_{false};
+    bool sine_mode_{false};
 
     // True if high pass filter is on
     bool hipass_engage_{false};

@@ -76,13 +76,13 @@ void ChorusProcessor::ProcessSwitches()
     hipass_engage_ = hw_.switches[Terrarium::SWITCH_4].Pressed();
 
     // Toggle between tri and sine waveforms
-    if (tri_mode_ != hw_.switches[Terrarium::SWITCH_1].Pressed()) {
-        tri_mode_ = hw_.switches[Terrarium::SWITCH_1].Pressed();
+    if (sine_mode_ != hw_.switches[Terrarium::SWITCH_1].Pressed()) {
+        sine_mode_ = hw_.switches[Terrarium::SWITCH_1].Pressed();
 
-        if (tri_mode_) {
-            chorus_.SetOscType(bark::LfoType::STRI);
-        } else {
+        if (sine_mode_) {
             chorus_.SetOscType(bark::LfoType::SINE);
+        } else {
+            chorus_.SetOscType(bark::LfoType::STRI);
         }
     }
 }
