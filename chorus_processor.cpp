@@ -27,19 +27,19 @@ void ChorusProcessor::Init()
 
     // Set the inital state of the filters
     for (int i = 0; i < 2; i++) {
-        cut_filters_[i].Init(sample_rate, dingus_dsp::BiquadType::LowShelf);
+        cut_filters_[i].Init(sample_rate, bark::BiquadType::LowShelf);
         cut_filters_[i].SetParams(FILTER_CUTOFF, FILTER_Q, 0.0f);
 
-        boost_filters_[i].Init(sample_rate, dingus_dsp::BiquadType::LowShelf);
+        boost_filters_[i].Init(sample_rate, bark::BiquadType::LowShelf);
         boost_filters_[i].SetParams(FILTER_CUTOFF, FILTER_Q, 0.0f);
 
-        hipass_filters_[i].Init(sample_rate, dingus_dsp::BiquadType::HighPass);
+        hipass_filters_[i].Init(sample_rate, bark::BiquadType::HighPass);
         hipass_filters_[i].SetParams(110.f, FILTER_Q, 0.0f);
 
-        tone_filters_[i].Init(sample_rate, dingus_dsp::OnePoleType::LowPass);
+        tone_filters_[i].Init(sample_rate, bark::OnePoleType::LowPass);
     }
 
-    mixer_.SetType(dingus_dsp::MixType::Sqrt);
+    mixer_.SetType(bark::MixType::Sqrt);
 
     // Initialize the smoothed paramters
     delay_time_.Init(0.025f, sample_rate);
@@ -80,9 +80,9 @@ void ChorusProcessor::ProcessSwitches()
         tri_mode_ = hw_.switches[Terrarium::SWITCH_1].Pressed();
 
         if (tri_mode_) {
-            chorus_.SetOscType(dingus_dsp::LfoType::STRI);
+            chorus_.SetOscType(bark::LfoType::STRI);
         } else {
-            chorus_.SetOscType(dingus_dsp::LfoType::SINE);
+            chorus_.SetOscType(bark::LfoType::SINE);
         }
     }
 }
@@ -100,7 +100,7 @@ void ChorusProcessor::ProcessKnobs()
 
     // Update delay time only if the knob was moved
     float knob3 = hw_.knob[Terrarium::KNOB_3].Process();
-    if (!dingus_dsp::CompareFloat(delay_knob_, knob3, 0.001f)) {
+    if (!bark::CompareFloat(delay_knob_, knob3, 0.001f)) {
         delay_knob_ = knob3;
         delay_time_.SetTargetValue(chorus_.GetMinDelay() + delay_knob_ * chorus_.GetMaxDelay());
     }
@@ -117,7 +117,7 @@ void ChorusProcessor::ProcessKnobs()
 
     // Set the tone filter cutoff
     lofi_ = hw_.knob[Terrarium::KNOB_2].Process();
-    float tone = dingus_dsp::QuadraticScale<float>(800.0f, 20000.0f, 1.f - lofi_);
+    float tone = bark::QuadraticScale<float>(800.0f, 20000.0f, 1.f - lofi_);
 
     // Update all filters
     for (int i = 0; i < 2; i++) {
@@ -128,7 +128,7 @@ void ChorusProcessor::ProcessKnobs()
 
     // Rate scales from .01Hz - 20Hz
     float rate_knob = hw_.knob[Terrarium::KNOB_5].Process();
-    chorus_.SetRate(dingus_dsp::QuadraticScale(0.1f, 10.0f, rate_knob));
+    chorus_.SetRate(bark::QuadraticScale(0.1f, 10.0f, rate_knob));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -175,8 +175,8 @@ void ChorusProcessor::AudioCallback(daisy::AudioHandle::InputBuffer in,
         dry_r = boost_filters_[1].Process(in[1][i]);
 
         if (engage_fs1_) {
-            out[0][i] = mixer_.Process(dry_l, dingus_dsp::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
-            out[1][i] = mixer_.Process(dry_r, dingus_dsp::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
+            out[0][i] = mixer_.Process(dry_l, bark::SoftClip::Sinusoidal(wet_l - wet_r * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
+            out[1][i] = mixer_.Process(dry_r, bark::SoftClip::Sinusoidal(wet_r - wet_l * mix_scale_, CLIP_THRESH - lofi_ * 0.2f));
         } else {
             out[0][i] = in[0][i];
             out[1][i] = in[1][i];

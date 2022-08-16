@@ -15,7 +15,7 @@
 
 #include "daisy_petal.h"
 #include "terrarium.h"
-#include "../../DingusDSP/source/dingus_dsp.h"
+#include "../../BarkLib/source/bark.h"
 
 // Processor class to manage the controls and the audio callback.
 class ChorusProcessor
@@ -56,22 +56,22 @@ private:
     daisy::Led led2_;
 
     // The chorus audio processor.
-    dingus_dsp::Chorus chorus_;
+    bark::Chorus chorus_;
 
     // Stereo low shelf cut
-    std::array<dingus_dsp::BiquadFilter, 2> cut_filters_;
+    std::array<bark::BiquadFilter, 2> cut_filters_;
 
     // Stereo low shelf boost
-    std::array<dingus_dsp::BiquadFilter, 2> boost_filters_;
+    std::array<bark::BiquadFilter, 2> boost_filters_;
 
     // Stereo high pass filters
-    std::array<dingus_dsp::BiquadFilter, 2> hipass_filters_;
+    std::array<bark::BiquadFilter, 2> hipass_filters_;
 
     // Stereo lowpass tone filter
-    std::array<dingus_dsp::OnePoleFilter, 2> tone_filters_;
+    std::array<bark::OnePoleFilter, 2> tone_filters_;
 
     // Wet/dry mixer
-    dingus_dsp::Mixer mixer_;
+    bark::Mixer mixer_;
 
     // Parameters
 
@@ -88,10 +88,10 @@ private:
     static constexpr float CLIP_THRESH = 1.2f;
 
     // Delay time of chorus.
-    dingus_dsp::SmoothValue<float> delay_time_{};
+    bark::SmoothValue<float> delay_time_{};
 
     // Depth of chorus.
-    dingus_dsp::SmoothValue<float> depth_{};
+    bark::SmoothValue<float> depth_{};
 
     // Previous system time. Used for tap tempo.
     uint32_t prev_time_{};
